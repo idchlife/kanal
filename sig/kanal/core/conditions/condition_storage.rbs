@@ -1,0 +1,9 @@
+module Kanal
+  module Core
+    module Conditions
+      class ConditionStorage
+        def get_condition_pack_by_name: (name: String) -> ConditionPack
+      end
+    end
+  end
+end

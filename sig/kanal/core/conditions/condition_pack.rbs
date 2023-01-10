@@ -1,0 +1,9 @@
+module Kanal
+  module Core
+    module Conditions
+      class ConditionPack
+
+      end
+    end
+  end
+end

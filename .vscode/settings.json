@@ -1,0 +1,8 @@
+{
+  "ruby.interpreter.commandPath": "/Users/idchlife/.rvm/rubies/ruby-2.7.2/bin/ruby",
+  "ruby.useBundler": false,
+  "solargraph.commandPath": "bin/solargraph",
+  "solargraph.bundlerPath": "bin/bundle",
+  "solargraph.useBundler": true,
+  "solargraph.diagnostics": false
+}
