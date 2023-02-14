@@ -23,6 +23,12 @@ RSpec.describe Kanal::Core::Router::Router do
       body "Default"
     end
 
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
     input = core.create_input
 
     expect { core.router.create_output_for_input input }.to raise_error(/does not have ANY routes/)
@@ -91,69 +97,172 @@ RSpec.describe Kanal::Core::Router::Router do
     input = core.create_input
     input.body = "hey what's going on"
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output.body).to include "Welp"
+    expect(outputs.first.body).to include "Welp"
 
     input = core.create_input
     input.body = "at first there was"
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output.body).to include "Hey Goobins"
+    expect(outputs.first.body).to include "Hey Goobins"
 
     input = core.create_input
     input.body = "never gonna give you up"
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output).not_to be nil
-    expect(output.body).to include "keks"
+    expect(outputs.first).not_to be nil
+    expect(outputs.first.body).to include "keks"
 
     input = core.create_input
     input.body = "wth"
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output.body).to include "Default"
+    expect(outputs.first.body).to include "Default"
 
     input = core.create_input
     input.body = "at first she was"
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output.body).to include "second"
+    expect(outputs.first.body).to include "second"
 
     input = core.create_input
     input.body = "at first ones does"
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output.body).to include "Third"
+    expect(outputs.first.body).to include "Third"
 
     # flow any check
     input = core.create_input
     input.body = "at first out of the box"
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output.body).to include "Out of the box"
+    expect(outputs.first.body).to include "Out of the box"
 
     # source check
     input = core.create_input
     input.body = "source check"
     input.source = :cli
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output.body).to include "got message from cli"
+    expect(outputs.first.body).to include "got message from cli"
 
     input = core.create_input
     input.body = "source check"
     input.source = :web
 
-    output = core.router.create_output_for_input input
+    outputs = []
+    core.router.consume_input input
 
-    expect(output.body).to include "got message from web"
+    expect(outputs.first.body).to include "got message from web"
+  end
+
+  it "checks multiple-output responses" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.configure do
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "multi" do
+        respond do
+          body "Welp1"
+        end
+
+        respond do
+          body "Welp2"
+        end
+
+        respond do
+          body "Welp3"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.body = "multi"
+
+    core.router.consume_input input
+
+    expect(outputs.first.body).to include "Welp1"
+    expect(outputs.last.body).to include "Welp3"
+    expect(outputs.count).to eq 3
+  end
+
+  it "checks async responses" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.configure do
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "multi" do
+        respond do
+          body "Welp1"
+        end
+
+        respond_async do
+          body "Welp2"
+        end
+
+        respond do
+          body "Welp3"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.body = "multi"
+
+    core.router.consume_input input
+
+    expect(outputs.first.body).to include "Welp1"
+    expect(outputs.last.body).to include "Welp3"
+    expect(outputs.count).to eq 2
+
+    # Waiting for async thread to finish its job
+    sleep(0.001)
+
+    expect(outputs.last.body).to include "Welp2"
+    expect(outputs.count).to eq 3
   end
 end

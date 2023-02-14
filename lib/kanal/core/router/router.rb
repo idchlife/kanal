@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "./router_node"
+require_relative "../helpers/queue"
+require_relative "../helpers/response_execution_block"
 
 module Kanal
   module Core
@@ -10,6 +12,8 @@ module Kanal
       # namespace. Basically class router stores all the
       # router nodes and have a name.
       class Router
+        include Helpers
+
         attr_reader :name,
                     :core
 
@@ -18,6 +22,17 @@ module Kanal
           @core = core
           @root_node = nil
           @default_node = nil
+          @response_execution_queue = Queue.new
+          @output_queue = Queue.new
+          @output_ready_block = nil
+          @core.hooks.register(:output_ready) # arg
+
+          _this = self
+          _output_queue = @output_queue
+          @output_queue.hooks.attach :item_queued do |output|
+            _this.output_ready_block.call output
+            _output_queue.remove(output)
+          end
         end
 
         def configure(&block)
@@ -59,6 +74,49 @@ module Kanal
           @core.hooks.call :output_before_returned, input, output
 
           output
+        end
+
+        def consume_input(input)
+          # Checking if default node with output exists throw error if not
+          raise "Please provide default response for router before you try and throw input against it ;)" unless @default_node
+
+          raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method" unless @root_node
+
+          raise "You must provide block via .output_ready for router to function properly" unless @output_ready_block
+
+          @core.hooks.call :input_before_router, input
+
+          node = test_input_against_router_node input, @root_node
+
+          # No result means no route node was found for that input
+          # using default response
+          node ||= @default_node
+
+          response_blocks = node.response_blocks
+
+          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input }
+
+          response_execution_blocks.each do |reb|
+            @response_execution_queue.enqueue reb
+          end
+
+          process_response_execution_queue
+        end
+
+        def process_response_execution_queue
+          while !@response_execution_queue.empty?
+            response_execution = @response_execution_queue.dequeue
+
+            response_execution.execute core, @output_queue
+          end
+        end
+
+        def output_ready(&block)
+          @output_ready_block = block
+        end
+
+        def output_ready_block
+          @output_ready_block
         end
 
         # Recursive method for searching router nodes

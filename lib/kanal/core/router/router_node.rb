@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../output/output"
+require_relative "../helpers/response_block"
 
 module Kanal
   module Core
@@ -11,6 +12,7 @@ module Kanal
       # tree, containing conditions and responses
       class RouterNode
         include Output
+        include Helpers
 
         attr_reader :parent,
                     :children
@@ -24,7 +26,7 @@ module Kanal
 
           @children = []
 
-          @response_block = nil
+          @response_blocks = []
 
           @condition_pack_name = nil
           @condition_name = nil
@@ -58,14 +60,26 @@ module Kanal
           output
         end
 
+        def response_blocks
+          raise "no response block configured for this node. router: #{@router.name}. debug: #{debug_info}" unless @response_blocks.count > 0
+
+          @response_blocks
+        end
+
         def respond(&block)
           raise "Router node with children cannot have response" unless @children.empty?
 
-          @response_block = block
+          @response_blocks.append ResponseBlock.new(block)
+        end
+
+        def respond_async(&block)
+          raise "Router node with children cannot have response" unless @children.empty?
+
+          @response_blocks.append ResponseBlock.new(block, async: true)
         end
 
         def response?
-          !@response_block.nil?
+          !@response_blocks.empty?
         end
 
         # This method processes args to populate condition and condition pack
