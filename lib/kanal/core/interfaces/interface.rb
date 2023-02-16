@@ -24,6 +24,11 @@ module Kanal
         #
         def initialize(core)
           @core = core
+
+          _this = self
+          @core.router.output_ready do
+            _this.consume_output
+          end
         end
 
         #
@@ -57,6 +62,14 @@ module Kanal
         # @return [<Type>] <description>
         #
         def stop
+          raise NotImplementedError
+        end
+
+        def consume_input(input)
+          @core.router.consume_input input
+        end
+
+        def consume_output
           raise NotImplementedError
         end
       end
