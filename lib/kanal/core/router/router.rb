@@ -104,7 +104,7 @@ module Kanal
         end
 
         def process_response_execution_queue
-          while !@response_execution_queue.empty?
+          until @response_execution_queue.empty?
             response_execution = @response_execution_queue.dequeue
 
             response_execution.execute core, @output_queue

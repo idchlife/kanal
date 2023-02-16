@@ -26,8 +26,8 @@ module Kanal
           @core = core
 
           _this = self
-          @core.router.output_ready do
-            _this.consume_output
+          @core.router.output_ready do |output|
+            _this.consume_output output
           end
         end
 
@@ -69,7 +69,7 @@ module Kanal
           @core.router.consume_input input
         end
 
-        def consume_output
+        def consume_output(output)
           raise NotImplementedError
         end
       end

@@ -28,6 +28,8 @@ module Kanal
 
           output.instance_eval(&@response_block.block)
 
+          core.hooks.call :output_before_returned, input, output
+
           output
         end
       end
