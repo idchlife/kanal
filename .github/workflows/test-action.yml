@@ -1,5 +1,5 @@
 name: RSpec Test
-on: [push]
+on: [push, pull_request]
 jobs:
   TestRSpec:
     runs-on: ubuntu-latest
