@@ -5,7 +5,7 @@ require_relative "../../../lib/kanal/core/router/router"
 require_relative "../../../lib/kanal/core/core"
 require_relative "../../../lib/kanal/core/conditions/condition"
 require_relative "../../../lib/kanal/core/conditions/condition_pack"
-require_relative "../../../lib/kanal/plugins/batteries/batteries_plugin.rb"
+require_relative "../../../lib/kanal/plugins/batteries/batteries_plugin"
 
 RSpec.describe Kanal::Core::Router::Router do
   it "checks router features with full blown configuration" do

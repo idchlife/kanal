@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Kanal
   module Core
     module Helpers
@@ -17,8 +19,7 @@ module Kanal
         end
 
         class ConditionFinder
-          def find_by_name(name)
-          end
+          def find_by_name(name); end
         end
       end
     end

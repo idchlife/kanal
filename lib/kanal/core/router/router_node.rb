@@ -51,7 +51,9 @@ module Kanal
         end
 
         def construct_response(input)
-          raise "no response block configured for this node. router: #{@router.name}. debug: #{debug_info}" unless @response_block
+          unless @response_block
+            raise "no response block configured for this node. router: #{@router.name}. debug: #{debug_info}"
+          end
 
           output = Output::Output.new @router.core.output_parameter_registrator, input, @router.core
 
@@ -61,7 +63,9 @@ module Kanal
         end
 
         def response_blocks
-          raise "no response block configured for this node. router: #{@router.name}. debug: #{debug_info}" unless @response_blocks.count > 0
+          unless @response_blocks.count.positive?
+            raise "no response block configured for this node. router: #{@router.name}. debug: #{debug_info}"
+          end
 
           @response_blocks
         end

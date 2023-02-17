@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Kanal
   module Core
     module Services
@@ -66,14 +68,13 @@ module Kanal
 
           registration = @registrations[name]
 
-          if registration.type == TYPE_SINGLETON
+          case registration.type
+          when TYPE_SINGLETON
             # Created once and reused after creation
-            if @services[name].nil?
-              @services[name] = create_service_from_registration registration
-            end
+            @services[name] = create_service_from_registration registration if @services[name].nil?
 
             @services[name]
-          elsif registration.type == TYPE_TRANSIENT
+          when TYPE_TRANSIENT
             # Created every time
             create_service_from_registration registration
           end

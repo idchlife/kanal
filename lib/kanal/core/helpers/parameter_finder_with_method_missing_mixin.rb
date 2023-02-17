@@ -18,18 +18,16 @@ module Kanal
           # input.prop = 123
           if symbol.to_s.include? "="
             @parameter_bag.set parameter_name, args.first
-          else
+          elsif !args.empty?
             # this approach can be used also in dsl
             # like that
             # setters: prop value
             # getters: prop
-            if !args.empty?
-              # means it is used as setter in dsl,
-              # method call with argument
-              @parameter_bag.set(parameter_name, *args)
-            else
-              @parameter_bag.get parameter_name
-            end
+            @parameter_bag.set(parameter_name, *args)
+          # means it is used as setter in dsl,
+          # method call with argument
+          else
+            @parameter_bag.get parameter_name
           end
         end
       end

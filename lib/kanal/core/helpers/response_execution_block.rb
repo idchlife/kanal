@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../output/output"
 
 module Kanal
@@ -7,10 +9,12 @@ module Kanal
         include Output
 
         attr_reader :response_block, :input
+
         def initialize(response_block, input)
           @response_block = response_block
           @input = input
         end
+
         def execute(core, output_queue)
           if response_block.async?
             Thread.new do

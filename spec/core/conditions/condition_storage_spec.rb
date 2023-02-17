@@ -8,7 +8,7 @@ RSpec.describe Kanal::Core::Conditions::ConditionStorage do
   it "checks storage condition registration, condition finding etc" do
     pack = Kanal::Core::Conditions::ConditionPack.new :test
 
-    condition = Kanal::Core::Conditions::Condition.new :works do |input, core, argument|
+    condition = Kanal::Core::Conditions::Condition.new :works do |_input, _core, _argument|
       true
     end
 

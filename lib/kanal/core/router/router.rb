@@ -14,8 +14,7 @@ module Kanal
       class Router
         include Helpers
 
-        attr_reader :name,
-                    :core
+        attr_reader :name, :core, :output_ready_block
 
         def initialize(name, core)
           @name = name
@@ -53,9 +52,13 @@ module Kanal
         # Main method for creating output if it is found or going to default output
         def create_output_for_input(input)
           # Checking if default node with output exists throw error if not
-          raise "Please provide default response for router before you try and throw input against it ;)" unless @default_node
+          unless @default_node
+            raise "Please provide default response for router before you try and throw input against it ;)"
+          end
 
-          raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method" unless @root_node
+          unless @root_node
+            raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method"
+          end
 
           unless @root_node.children?
             raise "Hey your router actually does not have ANY routes to work with. Did you even try adding them?"
@@ -78,9 +81,13 @@ module Kanal
 
         def consume_input(input)
           # Checking if default node with output exists throw error if not
-          raise "Please provide default response for router before you try and throw input against it ;)" unless @default_node
+          unless @default_node
+            raise "Please provide default response for router before you try and throw input against it ;)"
+          end
 
-          raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method" unless @root_node
+          unless @root_node
+            raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method"
+          end
 
           raise "You must provide block via .output_ready for router to function properly" unless @output_ready_block
 
@@ -113,10 +120,6 @@ module Kanal
 
         def output_ready(&block)
           @output_ready_block = block
-        end
-
-        def output_ready_block
-          @output_ready_block
         end
 
         # Recursive method for searching router nodes
