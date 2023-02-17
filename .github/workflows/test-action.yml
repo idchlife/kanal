@@ -9,4 +9,5 @@ jobs:
       with:
         ruby-version: '2.7.6'
         bundler-cache: false
+    - run: bundle install
     - run: bundle exec rspec spec
