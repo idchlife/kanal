@@ -1,0 +1,11 @@
+name: RSpec Test
+on: [push]
+jobs:
+  TestRSpec:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: ruby/setup-ruby@v1.138.0
+      with:
+        ruby-version: '2.7.6'
+        bundler-cache: false
+    - run: bundle exec rspec spec
