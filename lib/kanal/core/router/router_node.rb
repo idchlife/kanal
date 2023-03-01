@@ -50,20 +50,8 @@ module Kanal
           child.instance_eval(&block)
         end
 
-        def construct_response(input)
-          unless @response_block
-            raise "no response block configured for this node. router: #{@router.name}. debug: #{debug_info}"
-          end
-
-          output = Output::Output.new @router.core.output_parameter_registrator, input, @router.core
-
-          output.instance_eval(&@response_block)
-
-          output
-        end
-
         def response_blocks
-          unless @response_blocks.count.positive?
+          if @response_blocks.empty?
             raise "no response block configured for this node. router: #{@router.name}. debug: #{debug_info}"
           end
 

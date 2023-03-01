@@ -49,36 +49,7 @@ module Kanal
           @default_node.respond(&block)
         end
 
-        # Main method for creating output if it is found or going to default output
-        def create_output_for_input(input)
-          # Checking if default node with output exists throw error if not
-          unless @default_node
-            raise "Please provide default response for router before you try and throw input against it ;)"
-          end
-
-          unless @root_node
-            raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method"
-          end
-
-          unless @root_node.children?
-            raise "Hey your router actually does not have ANY routes to work with. Did you even try adding them?"
-          end
-
-          @core.hooks.call :input_before_router, input
-
-          node = test_input_against_router_node input, @root_node
-
-          # No result means no route node was found for that input
-          # using default response
-          node ||= @default_node
-
-          output = node.construct_response input
-
-          @core.hooks.call :output_before_returned, input, output
-
-          output
-        end
-
+        # Main method for creating output(s) if it is found or going to default output
         def consume_input(input)
           # Checking if default node with output exists throw error if not
           unless @default_node
