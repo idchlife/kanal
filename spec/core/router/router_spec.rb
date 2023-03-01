@@ -16,22 +16,22 @@ RSpec.describe Kanal::Core::Router::Router do
     # and utilized here
     core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
 
-    core.router.configure do
-    end
+    outputs = []
+
+    input = core.create_input
+
+    expect { core.router.consume_input input }.to raise_error("Please provide default response for router before you try and throw input against it ;)")
 
     core.router.default_response do
       body "Default"
     end
 
-    outputs = []
-
-    core.router.output_ready do |output|
-      outputs << output
+    core.router.configure do
     end
 
     input = core.create_input
 
-    expect { core.router.create_output_for_input input }.to raise_error(/does not have ANY routes/)
+    expect { core.router.consume_input input }.to raise_error(/does not have ANY routes/)
 
     expect do
       core.router.configure do
@@ -92,6 +92,14 @@ RSpec.describe Kanal::Core::Router::Router do
           end
         end
       end
+    end
+
+    input = core.create_input
+
+    expect { core.router.consume_input input }.to raise_error(/must provide block via .output_ready/)
+
+    core.router.output_ready do |output|
+      outputs << output
     end
 
     input = core.create_input

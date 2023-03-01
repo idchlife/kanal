@@ -60,7 +60,13 @@ module Kanal
             raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method"
           end
 
-          raise "You must provide block via .output_ready for router to function properly" unless @output_ready_block
+          unless @root_node.children?
+            raise "Hey your router actually does not have ANY routes to work with. Did you even try adding them?"
+          end
+
+          unless @output_ready_block
+            raise "You must provide block via .output_ready for router to function properly"
+          end
 
           @core.hooks.call :input_before_router, input
 
