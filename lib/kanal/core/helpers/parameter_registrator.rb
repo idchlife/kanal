@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Kanal
   module Core
     module Helpers

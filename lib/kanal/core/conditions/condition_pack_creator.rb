@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "./condition_pack"
 require_relative "./condition_creator"
 

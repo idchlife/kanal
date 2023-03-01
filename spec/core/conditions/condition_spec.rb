@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../../../lib/kanal/core/input/input"
 require_relative "../../../lib/kanal/core/conditions/condition"
 require_relative "../../../lib/kanal/core/helpers/parameter_registrator"
@@ -31,9 +33,7 @@ RSpec.describe Kanal::Core::Conditions::Condition do
 
     condition = Kanal::Core::Conditions::Condition.new :body_starts_with do |inp, _, argument|
       if input.body.include? "whatever"
-        if true
-          return false
-        end
+        return false if true
       else
         return false
       end

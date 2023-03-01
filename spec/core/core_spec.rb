@@ -24,7 +24,7 @@ class FaultyPlugin < Kanal::Core::Plugins::Plugin
     :faulty
   end
 
-  def setup(core)
+  def setup(_core)
     raise "I'm broken please fix me though dev
     probably abandoned me long time ago... Your dev is in another castle mate"
   end

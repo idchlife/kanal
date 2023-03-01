@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "./router_node"
+require_relative "../helpers/queue"
+require_relative "../helpers/response_execution_block"
 
 module Kanal
   module Core
@@ -10,14 +12,26 @@ module Kanal
       # namespace. Basically class router stores all the
       # router nodes and have a name.
       class Router
-        attr_reader :name,
-                    :core
+        include Helpers
+
+        attr_reader :name, :core, :output_ready_block
 
         def initialize(name, core)
           @name = name
           @core = core
           @root_node = nil
           @default_node = nil
+          @response_execution_queue = Queue.new
+          @output_queue = Queue.new
+          @output_ready_block = nil
+          @core.hooks.register(:output_ready) # arg
+
+          _this = self
+          _output_queue = @output_queue
+          @output_queue.hooks.attach :item_queued do |output|
+            _this.output_ready_block.call output
+            _output_queue.remove(output)
+          end
         end
 
         def configure(&block)
@@ -35,15 +49,23 @@ module Kanal
           @default_node.respond(&block)
         end
 
-        # Main method for creating output if it is found or going to default output
-        def create_output_for_input(input)
+        # Main method for creating output(s) if it is found or going to default output
+        def consume_input(input)
           # Checking if default node with output exists throw error if not
-          raise "Please provide default response for router before you try and throw input against it ;)" unless @default_node
+          unless @default_node
+            raise "Please provide default response for router before you try and throw input against it ;)"
+          end
 
-          raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method" unless @root_node
+          unless @root_node
+            raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method"
+          end
 
           unless @root_node.children?
             raise "Hey your router actually does not have ANY routes to work with. Did you even try adding them?"
+          end
+
+          unless @output_ready_block
+            raise "You must provide block via .output_ready for router to function properly"
           end
 
           @core.hooks.call :input_before_router, input
@@ -54,11 +76,27 @@ module Kanal
           # using default response
           node ||= @default_node
 
-          output = node.construct_response input
+          response_blocks = node.response_blocks
 
-          @core.hooks.call :output_before_returned, input, output
+          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input }
 
-          output
+          response_execution_blocks.each do |reb|
+            @response_execution_queue.enqueue reb
+          end
+
+          process_response_execution_queue
+        end
+
+        def process_response_execution_queue
+          until @response_execution_queue.empty?
+            response_execution = @response_execution_queue.dequeue
+
+            response_execution.execute core, @output_queue
+          end
+        end
+
+        def output_ready(&block)
+          @output_ready_block = block
         end
 
         # Recursive method for searching router nodes

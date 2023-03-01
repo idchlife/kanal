@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Kanal
   module Core
     module Output
@@ -8,9 +10,7 @@ module Kanal
           @input = input
         end
 
-        def create(&block)
-          
-        end
+        def create(&block); end
       end
     end
   end

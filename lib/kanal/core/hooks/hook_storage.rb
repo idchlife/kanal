@@ -81,9 +81,7 @@ module Kanal
         # @return [void] <description>
         #
         def attach(name, &block)
-          unless hook_exists? name
-            raise "You cannot listen to hook that does not exist! Hook in question: #{name}"
-          end
+          raise "You cannot listen to hook that does not exist! Hook in question: #{name}" unless hook_exists? name
 
           proc_to_lambda_object = Object.new
           proc_to_lambda_object.define_singleton_method(:hook_block, &block)

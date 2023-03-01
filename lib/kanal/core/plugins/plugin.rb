@@ -31,7 +31,7 @@ module Kanal
 
         #
         # If plugins does have rake tasks available for execution,
-        # require them here. They will be used 
+        # require them here. They will be used
         #
         # @return [Array<Rake::TaskLib>] <description>
         #
