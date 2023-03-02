@@ -14,13 +14,17 @@ module Kanal
       class Router
         include Helpers
 
-        attr_reader :name, :core, :output_ready_block
+        attr_reader :name, :core, :output_ready_block, :error_node
 
         def initialize(name, core)
           @name = name
           @core = core
           @root_node = nil
           @default_node = nil
+          @error_node = nil
+          error_response do
+            body "Unfortunately, error happened. Please consider contacting the creator of this bot to provide information about the circumstances of this error."
+          end
           @response_execution_queue = Queue.new
           @output_queue = Queue.new
           @output_ready_block = nil
@@ -47,6 +51,12 @@ module Kanal
           @default_node = RouterNode.new parent: nil, router: self, default: true
 
           @default_node.respond(&block)
+        end
+
+        def error_response(&block)
+          @error_node = RouterNode.new parent: nil, router: self, error: true
+
+          @error_node.respond(&block)
         end
 
         # Main method for creating output(s) if it is found or going to default output

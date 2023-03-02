@@ -273,4 +273,49 @@ RSpec.describe Kanal::Core::Router::Router do
     expect(outputs.last.body).to include "Welp2"
     expect(outputs.count).to eq 3
   end
+
+  it "checks error response" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.configure do
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "multi" do
+        respond do
+          raise "Some error"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.body = "multi"
+
+    core.router.consume_input input
+
+    expect(outputs.first.body).to include "Unfortunately"
+
+    core.router.error_response do
+      body "Custom error message"
+    end
+
+    input = core.create_input
+    input.body = "multi"
+
+    core.router.consume_input input
+
+    expect(outputs.last.body).to include "Custom error message"
+  end
 end

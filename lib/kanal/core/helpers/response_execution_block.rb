@@ -33,9 +33,17 @@ module Kanal
         def construct_output(core)
           output = Output::Output.new core.output_parameter_registrator, input, core
 
-          output.instance_eval(&@response_block.block)
+          begin
+            output.instance_eval(&@response_block.block)
 
-          core.hooks.call :output_before_returned, input, output
+            core.hooks.call :output_before_returned, input, output
+          rescue => e
+            output = Output::Output.new core.output_parameter_registrator, input, core
+
+            output.instance_eval(&core.router.error_node.response_blocks.first.block)
+
+            core.hooks.call :output_before_returned, input, output
+          end
 
           output
         end

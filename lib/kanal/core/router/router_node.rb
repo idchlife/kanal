@@ -20,7 +20,7 @@ module Kanal
         # parameter default: is for knowing that this node
         # is for default response
         # default response cannot have child nodes
-        def initialize(*args, router:, parent:, default: false, root: false)
+        def initialize(*args, router:, parent:, default: false, root: false, error: false)
           @router = router
           @parent = parent
 
@@ -34,7 +34,7 @@ module Kanal
 
           # We omit setting conditions because default router node does not need any conditions
           # Also root node does not have conditions so we basically omit them if arguments are empty
-          return if default || root
+          return if default || root || error
 
           # With this we attach names of condition pack and condition to this router
           # node, so we will be able to find them later at runtime and use them
