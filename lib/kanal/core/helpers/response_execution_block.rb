@@ -41,9 +41,17 @@ module Kanal
           rescue => e
             output = Output::Output.new core.output_parameter_registrator, input, core
 
-            output.instance_eval(&@error_node.response_blocks.first.block)
+            begin
+              output.instance_eval(&@error_node.response_blocks.first.block)
 
-            core.hooks.call :output_before_returned, input, output
+              core.hooks.call :output_before_returned, input, output
+            rescue => e
+              if core.plugin_registered? :batteries
+                raise "There was an error processing the error_response!"
+              else
+                raise "There was an error processing the error_response and there is no way to inform end user about it! Please check your provided error_response!"
+              end
+            end
           end
 
           output

@@ -401,6 +401,35 @@ RSpec.describe Kanal::Core::Router::Router do
     expect(outputs.last.body).to include "Custom error message"
   end
 
-  it "error handling in output_ready_block and error_response" do
+  it "error handling in error_response" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "sync" do
+        respond do
+          raise "Some error"
+        end
+      end
+    end
+
+    core.router.error_response do
+      raise "Error in error_response!"
+    end
+
+    input = core.create_input
+    input.body = "sync"
+    expect { core.router.consume_input input }.to raise_error(/error processing the error_response/)
   end
 end
