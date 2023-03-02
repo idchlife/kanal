@@ -333,16 +333,27 @@ RSpec.describe Kanal::Core::Router::Router do
     end
 
     core.router.configure do
-      on :body, starts_with: "multi" do
+      on :body, starts_with: "sync" do
         respond do
           raise "Some error"
+        end
+      end
+
+      on :body, starts_with: "async" do
+        respond_async do
+          raise "Some async error"
         end
       end
     end
 
     # Default error response body from router
     input = core.create_input
-    input.body = "multi"
+    input.body = "sync"
+    core.router.consume_input input
+    expect(outputs.first.body).to include "Unfortunately"
+
+    input = core.create_input
+    input.body = "async"
     core.router.consume_input input
     expect(outputs.first.body).to include "Unfortunately"
 
@@ -352,8 +363,16 @@ RSpec.describe Kanal::Core::Router::Router do
 
     # Custom error response provided earlier
     input = core.create_input
-    input.body = "multi"
+    input.body = "sync"
     core.router.consume_input input
     expect(outputs.last.body).to include "Custom error message"
+
+    input = core.create_input
+    input.body = "async"
+    core.router.consume_input input
+    expect(outputs.last.body).to include "Custom error message"
+  end
+
+  it "error handling in output_ready_block and error_response" do
   end
 end
