@@ -317,7 +317,7 @@ RSpec.describe Kanal::Core::Router::Router do
     expect { core.router.consume_input input }.to raise_error(/no way to inform end user/)
   end
 
-  it "checks error response with batteries" do
+  it "checks error for respond with batteries" do
     core = Kanal::Core::Core.new
 
     core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
@@ -338,22 +338,11 @@ RSpec.describe Kanal::Core::Router::Router do
           raise "Some error"
         end
       end
-
-      on :body, starts_with: "async" do
-        respond_async do
-          raise "Some async error"
-        end
-      end
     end
 
     # Default error response body from router
     input = core.create_input
     input.body = "sync"
-    core.router.consume_input input
-    expect(outputs.first.body).to include "Unfortunately"
-
-    input = core.create_input
-    input.body = "async"
     core.router.consume_input input
     expect(outputs.first.body).to include "Unfortunately"
 
@@ -366,10 +355,49 @@ RSpec.describe Kanal::Core::Router::Router do
     input.body = "sync"
     core.router.consume_input input
     expect(outputs.last.body).to include "Custom error message"
+  end
+
+  it "checks error for respond_async with batteries" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "async" do
+        respond_async do
+          raise "Some async error"
+        end
+      end
+    end
+
+    # Default error response body from router
 
     input = core.create_input
     input.body = "async"
     core.router.consume_input input
+    sleep(0.001)
+    expect(outputs.first.body).to include "Unfortunately"
+
+    core.router.error_response do
+      body "Custom error message"
+    end
+
+    # Custom error response provided earlier
+
+    input = core.create_input
+    input.body = "async"
+    core.router.consume_input input
+    sleep(0.001)
     expect(outputs.last.body).to include "Custom error message"
   end
 
