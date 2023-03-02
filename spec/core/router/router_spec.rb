@@ -20,7 +20,7 @@ RSpec.describe Kanal::Core::Router::Router do
 
     input = core.create_input
 
-    expect { core.router.consume_input input }.to raise_error("Please provide default response for router before you try and throw input against it ;)")
+    expect { core.router.consume_input input }.to raise_error(/provide default response for router/)
 
     core.router.default_response do
       body "Default"
@@ -274,13 +274,53 @@ RSpec.describe Kanal::Core::Router::Router do
     expect(outputs.count).to eq 3
   end
 
-  it "checks error response" do
+  it "checks exception raising without batteries" do
+    core = Kanal::Core::Core.new
+
+    core.register_input_parameter :test_condition
+
+    core.add_condition_pack :test_condition do
+      add_condition :contains do
+        with_argument
+
+        met? do |input, _, argument|
+          if input.test_condition.is_a? String
+            input.test_condition.include? argument
+          else
+            false
+          end
+        end
+      end
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :test_condition, contains: "multi" do
+        respond do
+          body "Some body"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.test_condition = "multi"
+
+    expect { core.router.consume_input input }.to raise_error(/no way to inform end user/)
+  end
+
+  it "checks error response with batteries" do
     core = Kanal::Core::Core.new
 
     core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
-
-    core.router.configure do
-    end
 
     core.router.default_response do
       body "Default"
@@ -300,22 +340,20 @@ RSpec.describe Kanal::Core::Router::Router do
       end
     end
 
+    # Default error response body from router
     input = core.create_input
     input.body = "multi"
-
     core.router.consume_input input
-
     expect(outputs.first.body).to include "Unfortunately"
 
     core.router.error_response do
       body "Custom error message"
     end
 
+    # Custom error response provided earlier
     input = core.create_input
     input.body = "multi"
-
     core.router.consume_input input
-
     expect(outputs.last.body).to include "Custom error message"
   end
 end

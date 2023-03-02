@@ -14,7 +14,7 @@ module Kanal
       class Router
         include Helpers
 
-        attr_reader :name, :core, :output_ready_block, :error_node
+        attr_reader :name, :core, :output_ready_block
 
         def initialize(name, core)
           @name = name
@@ -23,7 +23,11 @@ module Kanal
           @default_node = nil
           @error_node = nil
           error_response do
-            body "Unfortunately, error happened. Please consider contacting the creator of this bot to provide information about the circumstances of this error."
+            if core.plugin_registered? :batteries
+              body "Unfortunately, error happened. Please consider contacting the creator of this bot to provide information about the circumstances of this error."
+            else
+              raise "Error occurred and there is no way to inform end user about it. You can override error response with router.error_response method or register :batteries plugin so default response will populate the .body output parameter"
+            end
           end
           @response_execution_queue = Queue.new
           @output_queue = Queue.new
@@ -88,7 +92,7 @@ module Kanal
 
           response_blocks = node.response_blocks
 
-          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input }
+          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input, @error_node }
 
           response_execution_blocks.each do |reb|
             @response_execution_queue.enqueue reb

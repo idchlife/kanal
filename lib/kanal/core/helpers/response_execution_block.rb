@@ -10,9 +10,10 @@ module Kanal
 
         attr_reader :response_block, :input
 
-        def initialize(response_block, input)
+        def initialize(response_block, input, error_node)
           @response_block = response_block
           @input = input
+          @error_node = error_node
         end
 
         def execute(core, output_queue)
@@ -40,7 +41,7 @@ module Kanal
           rescue => e
             output = Output::Output.new core.output_parameter_registrator, input, core
 
-            output.instance_eval(&core.router.error_node.response_blocks.first.block)
+            output.instance_eval(&@error_node.response_blocks.first.block)
 
             core.hooks.call :output_before_returned, input, output
           end
