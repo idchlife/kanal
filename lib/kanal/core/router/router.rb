@@ -21,6 +21,7 @@ module Kanal
           @core = core
           @root_node = nil
           @default_node = nil
+          @default_error_node = nil
           default_error_response do
             if core.plugin_registered? :batteries
               body "Unfortunately, error happened. Please consider contacting the creator of this bot to provide information about the circumstances of this error."
@@ -96,7 +97,7 @@ module Kanal
 
           error_node = @error_node || @default_error_node
 
-          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input, error_node }
+          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input, @default_error_node, @error_node }
 
           response_execution_blocks.each do |reb|
             @response_execution_queue.enqueue reb
