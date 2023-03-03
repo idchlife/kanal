@@ -21,14 +21,14 @@ module Kanal
           @core = core
           @root_node = nil
           @default_node = nil
-          @error_node = nil
-          error_response do
+          default_error_response do
             if core.plugin_registered? :batteries
               body "Unfortunately, error happened. Please consider contacting the creator of this bot to provide information about the circumstances of this error."
             else
               raise "Error occurred and there is no way to inform end user about it. You can override error response with router.error_response method or register :batteries plugin so default response will populate the .body output parameter"
             end
           end
+          @error_node = nil
           @response_execution_queue = Queue.new
           @output_queue = Queue.new
           @output_ready_block = nil
@@ -58,6 +58,8 @@ module Kanal
         end
 
         def error_response(&block)
+          raise "error node for router #{@name} already defined" if @error_node
+
           @error_node = RouterNode.new parent: nil, router: self, error: true
 
           @error_node.respond(&block)
@@ -92,7 +94,9 @@ module Kanal
 
           response_blocks = node.response_blocks
 
-          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input, @error_node }
+          error_node = @error_node || @default_error_node
+
+          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input, error_node }
 
           response_execution_blocks.each do |reb|
             @response_execution_queue.enqueue reb
@@ -143,6 +147,12 @@ module Kanal
         end
 
         private :test_input_against_router_node
+
+        def default_error_response(&block)
+          @default_error_node = RouterNode.new parent: nil, router: self, error: true
+
+          @default_error_node.respond(&block)
+        end
       end
     end
   end

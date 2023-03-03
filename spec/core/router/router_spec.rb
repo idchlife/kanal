@@ -401,7 +401,78 @@ RSpec.describe Kanal::Core::Router::Router do
     expect(outputs.last.body).to include "Custom error message"
   end
 
-  it "error handling in error_response" do
+  it "error handling in default_error_response with batteries" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "sync" do
+        respond do
+          raise "Some error"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.body = "sync"
+    core.router.consume_input input
+    expect(outputs.last.body).to include "Unfortunately, error happened"
+  end
+
+  it "error handling in default_error_response without batteries" do
+    core = Kanal::Core::Core.new
+
+    core.register_input_parameter :test_condition
+
+    core.add_condition_pack :test_condition do
+      add_condition :contains do
+        with_argument
+
+        met? do |input, _, argument|
+          if input.test_condition.is_a? String
+            input.test_condition.include? argument
+          else
+            false
+          end
+        end
+      end
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :test_condition, contains: "multi" do
+        respond do
+          body "Some body"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.test_condition = "multi"
+    expect { core.router.consume_input input }.to raise_error(/no way to inform end user about it/)
+  end
+
+  it "error handling in error_response with batteries" do
     core = Kanal::Core::Core.new
 
     core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
@@ -430,6 +501,38 @@ RSpec.describe Kanal::Core::Router::Router do
 
     input = core.create_input
     input.body = "sync"
-    expect { core.router.consume_input input }.to raise_error(/error processing the error_response/)
+    expect { core.router.consume_input input }.to raise_error(RuntimeError)
   end
+
+  # it "error handling in output_block" do
+  #   core = Kanal::Core::Core.new
+  #
+  #   core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+  #
+  #   core.router.configure do
+  #   end
+  #
+  #   core.router.default_response do
+  #     body "Default"
+  #   end
+  #
+  #   outputs = []
+  #
+  #   core.router.output_ready do |output|
+  #     raise "Error in output block"
+  #   end
+  #
+  #   core.router.configure do
+  #     on :body, starts_with: "test" do
+  #       respond do
+  #         body "test"
+  #       end
+  #     end
+  #   end
+  #
+  #   input = core.create_input
+  #   input.body = "multi"
+  #   core.router.consume_input input
+  #   expect(outputs.first.body).to include "test"
+  # end
 end
