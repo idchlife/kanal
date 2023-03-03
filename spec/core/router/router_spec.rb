@@ -529,35 +529,34 @@ RSpec.describe Kanal::Core::Router::Router do
     expect { core.router.consume_input input }.to raise_error(/no way to inform end user about it/)
   end
 
-  # it "error handling in output_block" do
-  #   core = Kanal::Core::Core.new
-  #
-  #   core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
-  #
-  #   core.router.configure do
-  #   end
-  #
-  #   core.router.default_response do
-  #     body "Default"
-  #   end
-  #
-  #   outputs = []
-  #
-  #   core.router.output_ready do |output|
-  #     raise "Error in output block"
-  #   end
-  #
-  #   core.router.configure do
-  #     on :body, starts_with: "test" do
-  #       respond do
-  #         body "test"
-  #       end
-  #     end
-  #   end
-  #
-  #   input = core.create_input
-  #   input.body = "multi"
-  #   core.router.consume_input input
-  #   expect(outputs.first.body).to include "test"
-  # end
+  it "error handling in output_block" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.configure do
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      raise "Error in output block"
+    end
+
+    core.router.configure do
+      on :body, starts_with: "test" do
+        respond do
+          body "test"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.body = "multi"
+    expect { core.router.consume_input input }.to raise_error(/Error in output_ready block!/)
+  end
 end

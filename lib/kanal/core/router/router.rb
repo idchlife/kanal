@@ -38,8 +38,13 @@ module Kanal
           _this = self
           _output_queue = @output_queue
           @output_queue.hooks.attach :item_queued do |output|
-            _this.output_ready_block.call output
-            _output_queue.remove(output)
+            begin
+              _this.output_ready_block.call output
+              _output_queue.remove(output)
+            rescue
+              _output_queue.remove(output)
+              raise "Error in output_ready block!"
+            end
           end
         end
 
