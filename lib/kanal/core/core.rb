@@ -8,6 +8,7 @@ require_relative "./helpers/parameter_registrator"
 require_relative "./plugins/plugin"
 require_relative "./input/input"
 require_relative "./services/service_container"
+require_relative "./services/logger_service"
 
 module Kanal
   module Core
@@ -47,6 +48,8 @@ module Kanal
       attr_reader :hooks
       # @return [Kanal::Core::Services::ServiceContainer]
       attr_reader :services
+      # @return [Kanal::Core::Services::LoggerService.logger]
+      attr_reader :logger
 
       def initialize
         @hooks = HookStorage.new
@@ -61,6 +64,10 @@ module Kanal
         @plugins = []
 
         @services = ServiceContainer.new
+
+        @services.register_service :logger_service, LoggerService, type: :singleton
+
+        @logger = @services.get(:logger_service).logger
       end
 
       #

@@ -17,6 +17,7 @@ module Kanal
         attr_reader :name, :core, :output_ready_block
 
         def initialize(name, core)
+          core.logger.debug "Initializing router"
           @name = name
           @core = core
           @root_node = nil
