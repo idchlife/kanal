@@ -3,6 +3,7 @@
 require_relative "./router_node"
 require_relative "../helpers/queue"
 require_relative "../helpers/response_execution_block"
+require_relative "../logger/logging"
 
 module Kanal
   module Core
@@ -13,11 +14,12 @@ module Kanal
       # router nodes and have a name.
       class Router
         include Helpers
+        include Logging
 
         attr_reader :name, :core, :output_ready_block
 
         def initialize(name, core)
-          core.logger.info "[Router] Initializing"
+          logger.info "Initializing"
           @name = name
           @core = core
           @root_node = nil
@@ -30,14 +32,14 @@ module Kanal
           _this = self
           _output_queue = @output_queue
           @output_queue.hooks.attach :item_queued do |output|
-            _this.core.logger.debug "[Router] Calling output_ready block for input ##{output.input.__id__} and output #{output.__id__}. Output body is: '#{output.body}'"
+            _this.logger.debug "Calling output_ready block for input ##{output.input.__id__} and output #{output.__id__}. Output body is: '#{output.body}'"
             _this.output_ready_block.call output
             _output_queue.remove(output)
           end
         end
 
         def configure(&block)
-          @core.logger.info "[Router] Configuring"
+          logger.info "Configuring"
           # Root node does not have parent
           @root_node ||= RouterNode.new router: self, parent: nil, root: true
 
@@ -45,7 +47,7 @@ module Kanal
         end
 
         def default_response(&block)
-          @core.logger.info "[Router] Setting default response"
+          logger.info "Setting default response"
 
           raise "default node for router #{@name} already defined" if @default_node
 
@@ -56,7 +58,7 @@ module Kanal
 
         # Main method for creating output(s) if it is found or going to default output
         def consume_input(input)
-          @core.logger.info "[Router] Consuming input #{input.__id__}. Body: '#{input.body}'"
+          logger.info "Consuming input #{input.__id__}. Body: '#{input.body}'"
 
           # Checking if default node with output exists throw error if not
           unless @default_node
@@ -103,7 +105,7 @@ module Kanal
         end
 
         def output_ready(&block)
-          core.logger.debug "[Router] Setting output_ready block"
+          logger.debug "Setting output_ready block"
           @output_ready_block = block
         end
 

@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 require_relative "../output/output"
+require_relative "../logger/logging"
 
 module Kanal
   module Core
     module Helpers
       class ResponseExecutionBlock
         include Output
+        include Logging
 
         attr_reader :response_block, :input
 
@@ -31,7 +33,7 @@ module Kanal
         private
 
         def construct_output(core)
-          core.logger.debug "[ResponseExecutionBlock] Constructing output for input ##{input.__id__}"
+          logger.debug "Constructing output for input ##{input.__id__}"
 
           output = Output::Output.new core.output_parameter_registrator, input, core
 
@@ -39,7 +41,7 @@ module Kanal
 
           core.hooks.call :output_before_returned, input, output
 
-          core.logger.debug "[ResponseExecutionBlock] Output ##{output.__id__} for input ##{input.__id__} constructed"
+          logger.debug "Output ##{output.__id__} for input ##{input.__id__} constructed"
 
           output
         end

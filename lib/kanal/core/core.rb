@@ -8,7 +8,8 @@ require_relative "./helpers/parameter_registrator"
 require_relative "./plugins/plugin"
 require_relative "./input/input"
 require_relative "./services/service_container"
-require_relative "./services/logger_service"
+require_relative "./logger/logging"
+
 
 module Kanal
   module Core
@@ -35,6 +36,7 @@ module Kanal
       include Plugins
       include Hooks
       include Services
+      include Logging
 
       # @return [Kanal::Core::Conditions::ConditionStorage]
       attr_reader :condition_storage
@@ -48,8 +50,6 @@ module Kanal
       attr_reader :hooks
       # @return [Kanal::Core::Services::ServiceContainer]
       attr_reader :services
-      # @return [Kanal::Core::Services::LoggerService.logger]
-      attr_reader :logger
 
       def initialize
         @hooks = HookStorage.new
@@ -64,10 +64,6 @@ module Kanal
         @plugins = []
 
         @services = ServiceContainer.new
-
-        @services.register_service :logger_service, LoggerService, type: :singleton
-
-        @logger = @services.get(:logger_service)
       end
 
       #
@@ -160,7 +156,7 @@ module Kanal
       # @return [void] <description>
       #
       def register_input_parameter(name, readonly: false)
-        @logger.info "[Core] Registering input parameter: '#{name}', readonly: '#{readonly}'"
+        logger.info "Registering input parameter: '#{name}', readonly: '#{readonly}'"
         @input_parameter_registrator.register_parameter name, readonly: readonly
       end
 
@@ -173,7 +169,7 @@ module Kanal
       # @return [void] <description>
       #
       def register_output_parameter(name, readonly: false)
-        @logger.info "[Core] Registering output parameter: '#{name}', readonly: '#{readonly}'"
+        logger.info "Registering output parameter: '#{name}', readonly: '#{readonly}'"
         @output_parameter_registrator.register_parameter name, readonly: readonly
       end
 
@@ -188,7 +184,7 @@ module Kanal
       # @return [void] <description>
       #
       def add_condition_pack(name, &block)
-        @logger.info "[Core] Adding condition pack: '#{name}'"
+        logger.info "Adding condition pack: '#{name}'"
 
         creator = ConditionPackCreator.new name
 
