@@ -31,11 +31,15 @@ module Kanal
         private
 
         def construct_output(core)
+          core.logger.debug "[ResponseExecutionBlock] Constructing output for input ##{input.__id__}"
+
           output = Output::Output.new core.output_parameter_registrator, input, core
 
           output.instance_eval(&@response_block.block)
 
           core.hooks.call :output_before_returned, input, output
+
+          core.logger.debug "[ResponseExecutionBlock] Output ##{output.__id__} for input ##{input.__id__} constructed"
 
           output
         end

@@ -11,6 +11,14 @@ module Kanal
         def initialize()
           @logger = Logger.new STDOUT
         end
+
+        def info(text)
+          @logger.info text
+        end
+
+        def debug(text)
+          @logger.debug text
+        end
       end
     end
   end

@@ -67,7 +67,7 @@ module Kanal
 
         @services.register_service :logger_service, LoggerService, type: :singleton
 
-        @logger = @services.get(:logger_service).logger
+        @logger = @services.get(:logger_service)
       end
 
       #
@@ -160,6 +160,7 @@ module Kanal
       # @return [void] <description>
       #
       def register_input_parameter(name, readonly: false)
+        @logger.info "[Core] Registering input parameter: '#{name}', readonly: '#{readonly}'"
         @input_parameter_registrator.register_parameter name, readonly: readonly
       end
 
@@ -172,6 +173,7 @@ module Kanal
       # @return [void] <description>
       #
       def register_output_parameter(name, readonly: false)
+        @logger.info "[Core] Registering output parameter: '#{name}', readonly: '#{readonly}'"
         @output_parameter_registrator.register_parameter name, readonly: readonly
       end
 
@@ -186,6 +188,8 @@ module Kanal
       # @return [void] <description>
       #
       def add_condition_pack(name, &block)
+        @logger.info "[Core] Adding condition pack: '#{name}'"
+
         creator = ConditionPackCreator.new name
 
         pack = creator.create(&block)
