@@ -17,6 +17,7 @@ module Kanal
         def create_logger(class_name)
           logger = Logger.new STDOUT
           logger.progname = class_name.rpartition(':').last
+          logger.datetime_format = "%d-%m-%Y %H:%M:%S"
           logger
         end
       end
