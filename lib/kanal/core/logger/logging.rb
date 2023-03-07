@@ -10,7 +10,7 @@ module Kanal
 
       # Mixing in Logger in some class adds possibility to use logger instance method
       def logger
-        @logger_instance = Logging.create_logger self.class.name
+        @logger_instance = Logging.get_or_create_logger self.class.name
       end
 
       class << self
