@@ -184,7 +184,7 @@ module Kanal
       # @return [void] <description>
       #
       def add_condition_pack(name, &block)
-        logger.info "Adding condition pack: '#{name}'"
+        logger.info "Starting to create condition pack '#{name}'"
 
         creator = ConditionPackCreator.new name
 

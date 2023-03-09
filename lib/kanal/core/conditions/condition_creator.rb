@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
+require_relative "../logger/logging"
+
 module Kanal
   module Core
     module Conditions
       # This class helps creating conditions in dsl way,
       # with using helper methods
       class ConditionCreator
+        include Logging
+
         def initialize(name)
           @name = name
           @met_block = nil
@@ -15,8 +19,19 @@ module Kanal
         def create(&block)
           instance_eval(&block)
 
-          raise "Please provide name for condition" unless @name
-          raise "Please provide met? block for condition #{@name}" unless @met_block
+          unless @name
+            logger.warn "Attempted to create condition without name"
+
+            raise "Please provide name for condition"
+          end
+
+          unless @met_block
+            logger.warn "Attempted to create condition without met block"
+
+            raise "Please provide met? block for condition #{@name}"
+          end
+
+          logger.info "Creating condition '#{@name}'"
 
           Condition.new @name, with_argument: @with_argument, &@met_block
         end

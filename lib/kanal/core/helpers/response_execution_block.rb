@@ -33,7 +33,7 @@ module Kanal
         private
 
         def construct_output(core)
-          logger.debug "Constructing output for input ##{input.__id__}"
+          logger.info "Constructing output for input ##{input.__id__}"
 
           output = Output::Output.new core.output_parameter_registrator, input, core
 
@@ -41,7 +41,7 @@ module Kanal
 
           core.hooks.call :output_before_returned, input, output
 
-          logger.debug "Output ##{output.__id__} for input ##{input.__id__} constructed"
+          logger.info "Output ##{output.__id__} for input ##{input.__id__} constructed"
 
           output
         end

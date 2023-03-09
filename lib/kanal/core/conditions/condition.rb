@@ -1,17 +1,24 @@
 # frozen_string_literal: true
 
+require_relative "../logger/logging"
+
 module Kanal
   module Core
     module Conditions
       # Base class for conditions
       # with this class you can
       class Condition
+        include Logging
+
         attr_reader :name
 
         def initialize(name, with_argument: false, &met_block)
           @name = name
 
-          raise "Cannot create condition without block" unless met_block
+          unless met_block
+            logger.warn "Attempt create condition #{name} without block"
+            raise "Cannot create condition without block"
+          end
 
           @with_argument = with_argument
 
