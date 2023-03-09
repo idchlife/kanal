@@ -37,7 +37,7 @@ module Kanal
             raise "Parameter named #{name} already registered!"
           end
 
-          logger.fatal "Registering parameter '#{name}'"
+          logger.info "Registering parameter '#{name}'"
 
           registration = ParameterRegistration.new readonly
 
