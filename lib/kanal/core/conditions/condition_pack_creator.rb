@@ -23,13 +23,13 @@ module Kanal
           instance_eval(&block)
 
           unless @name
-            logger.warn "Attempted to create condition pack without name"
+            logger.fatal "Attempted to create condition pack without name"
 
             raise "Please provide condition pack name"
           end
 
           if @conditions.empty?
-            logger.warn "Attempted to create condition pack #{@name} without conditions provided"
+            logger.fatal "Attempted to create condition pack #{@name} without conditions provided"
 
             raise "Please provide conditions for condition pack #{@name}"
           end

@@ -18,7 +18,7 @@ module Kanal
           pack = get_condition_pack_by_name name
 
           unless pack
-            logger.warn "Attempted to request unregistered condition pack #{name} from ConditionStorage"
+            logger.fatal "Attempted to request unregistered condition pack #{name} from ConditionStorage"
 
             raise "Condition pack #{name} is not registered, but was requested from ConditionStorage"
           end
@@ -55,12 +55,12 @@ module Kanal
           return if condition_pack_exists? pack
 
           unless pack.is_a? ConditionPack
-            logger.warn "Attempted to register condition pack which isn't of ConditionPack class"
+            logger.fatal "Attempted to register condition pack which isn't of ConditionPack class"
 
             raise "Condition pack should be descendant of ConditionPack class"
           end
 
-          logger.warn "Registering condition pack '#{pack.name}'"
+          logger.fatal "Registering condition pack '#{pack.name}'"
 
           @condition_packs.append pack
         end

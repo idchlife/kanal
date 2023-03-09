@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "parameter_bag"
+require_relative "../logger/logging"
 
 module Kanal
   module Core
@@ -9,6 +10,8 @@ module Kanal
       # and if they are has needed by registrator allowances, types etc, whatever
       # registrator rules are stored for property
       class ParameterBagWithRegistrator < ParameterBag
+        include Logging
+
         def initialize(registrator)
           super()
           @registrator = registrator
@@ -29,6 +32,9 @@ module Kanal
             value_exists = !get(name).nil?
 
             if value_exists
+              logger.fatal "Parameter #{name} is marked readonly! Attempted to set it's value, but
+              it already has value."
+
               raise "Parameter #{name} is marked readonly! You tried to set it's value, but
               it already has value."
             end
@@ -39,6 +45,8 @@ module Kanal
 
         def validate_parameter_registration(name)
           unless @registrator.parameter_registered? name
+            logger.fatal "Parameter #{name} was not registered! Did you forget to register that parameter?"
+
             raise "Parameter #{name} was not registered! Did you forget to register that parameter?"
           end
         end

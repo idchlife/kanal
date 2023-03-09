@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../logger/logging"
+
 module Kanal
   module Core
     module Services
@@ -26,6 +28,8 @@ module Kanal
       # lifespan types.
       #
       class ServiceContainer
+        include Logging
+
         TYPE_SINGLETON = :singleton
         TYPE_TRANSIENT = :transient
 
@@ -47,11 +51,23 @@ module Kanal
         # @return [void] <description>
         #
         def register_service(name, service_class, type: TYPE_SINGLETON, &block)
-          return if @registrations.key? name
+          logger.info "Trying to register service '#{name}'"
 
-          raise "Unrecognized service type #{type}. Allowed types: #{allowed_types}" unless allowed_types.include? type
+          if @registrations.key? name
+            logger.warn "Attempted to register service '#{name}', but it is already registered"
+
+            return
+          end
+
+          unless allowed_types.include? type
+            logger.fatal "Attempted to register service type '#{type}'."
+
+            raise "Unrecognized service type #{type}. Allowed types: #{allowed_types}"
+          end
 
           registration = ServiceRegistration.new service_class, type, block
+
+          logger.info "Registering service '#{name}'"
 
           @registrations[name] = registration
         end

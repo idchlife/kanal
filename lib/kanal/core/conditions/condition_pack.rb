@@ -24,7 +24,7 @@ module Kanal
           condition = get_condition_by_name name
 
           unless condition
-            logger.warn "Attempted to get condition #{name} in pack #{@name}"
+            logger.fatal "Attempted to get condition #{name} in pack #{@name}"
 
             raise "Condition #{name} was not found in pack #{@name}. Maybe it was not added?"
           end
@@ -37,15 +37,20 @@ module Kanal
         end
 
         def register_condition(condition)
-          logger.info "Registering condition '#{condition.name}'"
+          logger.info "Attempting to register condition '#{condition.name}'"
 
           unless condition.is_a? Condition
-            logger.warn "Attempted to register condition which isn't of Condition class"
+            logger.fatal "Attempted to register condition which isn't of Condition class"
 
             raise "Can register only conditions that inherit Condition class"
           end
 
-          return self if condition_registered? condition
+          if condition_registered? condition
+            logger.warn "Condition '#{condition.name}' already registered"
+            return self
+          end
+
+          logger.info "Registering condition '#{condition.name}'"
 
           @conditions.append condition
 

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../logger/logging"
+
 module Kanal
   module Core
     module Helpers
@@ -19,6 +21,8 @@ module Kanal
       # Class holds parameter names that are allowed
       # to be used.
       class ParameterRegistrator
+        include Logging
+
         def initialize
           @parameters_by_name = {}
         end
@@ -27,7 +31,13 @@ module Kanal
         # be changed. handy for input parameters populated by interface or
         # whatever
         def register_parameter(name, readonly: false)
-          raise "Parameter named #{name} already registered!" if @parameters_by_name.key? name
+          if @parameters_by_name.key? name
+            logger.fatal "Attempted to register already registered parameter '#{name}'"
+
+            raise "Parameter named #{name} already registered!"
+          end
+
+          logger.fatal "Registering parameter '#{name}'"
 
           registration = ParameterRegistration.new readonly
 

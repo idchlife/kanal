@@ -17,16 +17,18 @@ module Kanal
         end
 
         def create(&block)
+          logger.info "Attempting to create condition '#{@name}'"
+
           instance_eval(&block)
 
           unless @name
-            logger.warn "Attempted to create condition without name"
+            logger.fatal "Attempted to create condition without name"
 
             raise "Please provide name for condition"
           end
 
           unless @met_block
-            logger.warn "Attempted to create condition without met block"
+            logger.fatal "Attempted to create condition without met block"
 
             raise "Please provide met? block for condition #{@name}"
           end

@@ -16,7 +16,8 @@ module Kanal
           @name = name
 
           unless met_block
-            logger.warn "Attempt create condition #{name} without block"
+            logger.fatal "Attempted to create condition #{name} without block"
+
             raise "Cannot create condition without block"
           end
 
