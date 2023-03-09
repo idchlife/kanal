@@ -60,7 +60,7 @@ module Kanal
             raise "Condition pack should be descendant of ConditionPack class"
           end
 
-          logger.fatal "Registering condition pack '#{pack.name}'"
+          logger.info "Registering condition pack '#{pack.name}'"
 
           @condition_packs.append pack
         end
