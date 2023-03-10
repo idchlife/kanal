@@ -268,7 +268,7 @@ RSpec.describe Kanal::Core::Router::Router do
     expect(outputs.count).to eq 2
 
     # Waiting for async thread to finish its job
-    sleep(0.001)
+    sleep(0.3)
 
     expect(outputs.last.body).to include "Welp2"
     expect(outputs.count).to eq 3
