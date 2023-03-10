@@ -44,15 +44,23 @@ module Kanal
 
             core.hooks.call :output_before_returned, input, output
           rescue => e
+            logger.error "Failed to construct output for input ##{input.__id__}. Error: '#{e}'"
+
             output = Output::Output.new core.output_parameter_registrator, input, core
 
             error_node = @error_node || @default_error_node
+
+            logger.info "Trying to construct error response for input ##{input.__id__}. Error response is default: #{@error_node.nil?}"
 
             begin
               output.instance_eval(&error_node.response_blocks.first.block)
 
               core.hooks.call :output_before_returned, input, output
             rescue => e
+              logger.error "Failed to construct error response for input ##{input.__id__}. Error: '#{e}'"
+
+              logger.info "Trying to construct default error response for input ##{input.__id__}"
+
               output.instance_eval(&@default_error_node.response_blocks.first.block)
 
               core.hooks.call :output_before_returned, input, output
