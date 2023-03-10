@@ -2,6 +2,7 @@
 
 require_relative "../output/output"
 require_relative "../helpers/response_block"
+require_relative "../logger/logging"
 
 module Kanal
   module Core
@@ -13,6 +14,7 @@ module Kanal
       class RouterNode
         include Output
         include Helpers
+        include Logging
 
         attr_reader :parent,
                     :children
@@ -94,6 +96,8 @@ module Kanal
           condition = pack.get_condition_by_name! condition_name
 
           if condition.with_argument? && !@condition_argument
+            logger.fatal "Condition requires argument, but was provided as :symbol, not as positional_arg:"
+
             raise "Condition requires argument, though you wrote it as :symbol, not as positional_arg:
             Please check route with condition pack: #{condition_pack_name} and condition: #{condition_name}"
           end

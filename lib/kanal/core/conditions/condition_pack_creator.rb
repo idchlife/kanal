@@ -2,6 +2,7 @@
 
 require_relative "./condition_pack"
 require_relative "./condition_creator"
+require_relative "../logger/logging"
 
 module Kanal
   module Core
@@ -9,6 +10,8 @@ module Kanal
       # This class helps in condition pack creation
       # with the help of dsl
       class ConditionPackCreator
+        include Logging
+
         TEMP_NAME = :temp_name
 
         def initialize(name)
@@ -19,9 +22,19 @@ module Kanal
         def create(&block)
           instance_eval(&block)
 
-          raise "Please provide condition pack name" unless @name
+          unless @name
+            logger.fatal "Attempted to create condition pack without name"
 
-          raise "Please provide conditions for condition pack #{@name}" if @conditions.empty?
+            raise "Please provide condition pack name"
+          end
+
+          if @conditions.empty?
+            logger.fatal "Attempted to create condition pack #{@name} without conditions provided"
+
+            raise "Please provide conditions for condition pack #{@name}"
+          end
+
+          logger.info "Creating condition pack '#{@name}'"
 
           pack = ConditionPack.new(@name)
 

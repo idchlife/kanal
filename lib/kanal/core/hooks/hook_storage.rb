@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../logger/logging"
+
 module Kanal
   module Core
     module Hooks
@@ -8,6 +10,8 @@ module Kanal
       # attaching to hooks, calling hooks with arguments
       #
       class HookStorage
+        include Logging
+
         def initialize
           @listeners = {}
         end
@@ -29,7 +33,12 @@ module Kanal
         # Wondrous world of dynamic languages 🌈🦄
         #
         def register(name)
-          return if hook_exists? name
+          if hook_exists? name
+            logger.warn "Hook '#{name}' already exists"
+            return
+          end
+
+          logger.info "Registering hook '#{name}'"
 
           @listeners[name] = []
         end
