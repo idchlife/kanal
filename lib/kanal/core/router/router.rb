@@ -3,6 +3,7 @@
 require_relative "./router_node"
 require_relative "../helpers/queue"
 require_relative "../helpers/response_execution_block"
+require_relative "../logger/logging"
 
 module Kanal
   module Core
@@ -13,10 +14,13 @@ module Kanal
       # router nodes and have a name.
       class Router
         include Helpers
+        include Logging
 
         attr_reader :name, :core, :output_ready_block
 
         def initialize(name, core)
+          logger.info "Initializing"
+
           @name = name
           @core = core
           @root_node = nil
@@ -29,12 +33,15 @@ module Kanal
           _this = self
           _output_queue = @output_queue
           @output_queue.hooks.attach :item_queued do |output|
+            _this.logger.info "Calling output_ready block for input ##{output.input.__id__} and output #{output.__id__}. Output body is: '#{output.body}'"
             _this.output_ready_block.call output
             _output_queue.remove(output)
           end
         end
 
         def configure(&block)
+          logger.info "Configuring"
+
           # Root node does not have parent
           @root_node ||= RouterNode.new router: self, parent: nil, root: true
 
@@ -42,7 +49,13 @@ module Kanal
         end
 
         def default_response(&block)
-          raise "default node for router #{@name} already defined" if @default_node
+          logger.info "Setting default response"
+
+          if @default_node
+            logger.fatal "Attempted to set default_response for a second time"
+
+            raise "default node for router #{@name} already defined"
+          end
 
           @default_node = RouterNode.new parent: nil, router: self, default: true
 
@@ -51,20 +64,30 @@ module Kanal
 
         # Main method for creating output(s) if it is found or going to default output
         def consume_input(input)
+          logger.info "Consuming input #{input.__id__}. Body: '#{input.body}'"
+
           # Checking if default node with output exists throw error if not
           unless @default_node
+            logger.fatal "Attempted to consume input with no default response set"
+
             raise "Please provide default response for router before you try and throw input against it ;)"
           end
 
           unless @root_node
+            logger.fatal "Attempted to consume input but router is not configured"
+
             raise "You did not actually .configure router, didn't you? There is no even root node! Use .configure method"
           end
 
           unless @root_node.children?
+            logger.fatal "Attempted to consume input but router does not have any routes"
+
             raise "Hey your router actually does not have ANY routes to work with. Did you even try adding them?"
           end
 
           unless @output_ready_block
+            logger.fatal "Attempted to consume input but output_ready block is not set"
+
             raise "You must provide block via .output_ready for router to function properly"
           end
 
@@ -96,6 +119,8 @@ module Kanal
         end
 
         def output_ready(&block)
+          logger.info "Setting output_ready block"
+
           @output_ready_block = block
         end
 

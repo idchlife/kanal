@@ -44,4 +44,16 @@ RSpec.describe Kanal::Core::Conditions::Condition do
     expect(condition.met?(input, nil, "whatever")).to eq false
     expect(condition.met?(input, nil, "random stuff")).to eq false
   end
+
+  it "Raises error on attempt to create condition without block" do
+    registrator = Kanal::Core::Helpers::ParameterRegistrator.new
+
+    input = Kanal::Core::Input::Input.new registrator
+
+    registrator.register_parameter :body
+
+    input.body = "never gonna give you up"
+
+    expect { Kanal::Core::Conditions::Condition.new :body_starts_with }.to raise_error(/Cannot create condition without block/)
+  end
 end

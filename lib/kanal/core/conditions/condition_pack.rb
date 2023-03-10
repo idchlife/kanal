@@ -2,6 +2,7 @@
 
 require_relative "./condition"
 require_relative "./condition_creator"
+require_relative "../logger/logging"
 
 module Kanal
   module Core
@@ -10,6 +11,8 @@ module Kanal
       # It is served as some kind of namespace for conditions, with specific
       # name of pack and helper methods
       class ConditionPack
+        include Logging
+
         attr_reader :name
 
         def initialize(name)
@@ -20,7 +23,11 @@ module Kanal
         def get_condition_by_name!(name)
           condition = get_condition_by_name name
 
-          raise "Condition #{name} was not found in pack #{@name}. Maybe it was not added?" unless condition
+          unless condition
+            logger.fatal "Attempted to get condition #{name} in pack #{@name}"
+
+            raise "Condition #{name} was not found in pack #{@name}. Maybe it was not added?"
+          end
 
           condition
         end
@@ -30,9 +37,20 @@ module Kanal
         end
 
         def register_condition(condition)
-          raise "Can register only conditions that inherit Condition class" unless condition.is_a? Condition
+          logger.info "Attempting to register condition '#{condition.name}'"
 
-          return self if condition_registered? condition
+          unless condition.is_a? Condition
+            logger.fatal "Attempted to register condition which isn't of Condition class"
+
+            raise "Can register only conditions that inherit Condition class"
+          end
+
+          if condition_registered? condition
+            logger.warn "Condition '#{condition.name}' already registered"
+            return self
+          end
+
+          logger.info "Registering condition '#{condition.name}'"
 
           @conditions.append condition
 
