@@ -64,7 +64,7 @@ module Kanal
 
         # Main method for creating output(s) if it is found or going to default output
         def consume_input(input)
-          logger.info "Consuming input #{input.__id__}. Body: '#{input.body}'"
+          logger.info "Consuming input #{input.__id__}."
 
           # Checking if default node with output exists throw error if not
           unless @default_node
