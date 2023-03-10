@@ -12,9 +12,11 @@ module Kanal
 
         attr_reader :response_block, :input
 
-        def initialize(response_block, input)
+        def initialize(response_block, input, default_error_node, error_node)
           @response_block = response_block
           @input = input
+          @default_error_node = default_error_node
+          @error_node = error_node
         end
 
         def execute(core, output_queue)
@@ -37,9 +39,25 @@ module Kanal
 
           output = Output::Output.new core.output_parameter_registrator, input, core
 
-          output.instance_eval(&@response_block.block)
+          begin
+            output.instance_eval(&@response_block.block)
 
-          core.hooks.call :output_before_returned, input, output
+            core.hooks.call :output_before_returned, input, output
+          rescue => e
+            output = Output::Output.new core.output_parameter_registrator, input, core
+
+            error_node = @error_node || @default_error_node
+
+            begin
+              output.instance_eval(&error_node.response_blocks.first.block)
+
+              core.hooks.call :output_before_returned, input, output
+            rescue => e
+              output.instance_eval(&@default_error_node.response_blocks.first.block)
+
+              core.hooks.call :output_before_returned, input, output
+            end
+          end
 
           logger.info "Output ##{output.__id__} for input ##{input.__id__} constructed"
 

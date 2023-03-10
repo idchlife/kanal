@@ -20,7 +20,7 @@ RSpec.describe Kanal::Core::Router::Router do
 
     input = core.create_input
 
-    expect { core.router.consume_input input }.to raise_error("Please provide default response for router before you try and throw input against it ;)")
+    expect { core.router.consume_input input }.to raise_error(/provide default response for router/)
 
     core.router.default_response do
       body "Default"
@@ -268,9 +268,295 @@ RSpec.describe Kanal::Core::Router::Router do
     expect(outputs.count).to eq 2
 
     # Waiting for async thread to finish its job
-    sleep(0.001)
+    sleep(0.3)
 
     expect(outputs.last.body).to include "Welp2"
     expect(outputs.count).to eq 3
+  end
+
+  it "exception raised if no batteries registered" do
+    core = Kanal::Core::Core.new
+
+    core.register_input_parameter :test_condition
+
+    core.add_condition_pack :test_condition do
+      add_condition :contains do
+        with_argument
+
+        met? do |input, _, argument|
+          if input.test_condition.is_a? String
+            input.test_condition.include? argument
+          else
+            false
+          end
+        end
+      end
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :test_condition, contains: "multi" do
+        respond do
+          body "Some body"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.test_condition = "multi"
+
+    expect { core.router.consume_input input }.to raise_error(/no way to inform end user/)
+  end
+
+  it "error handling inside respond and respond_async" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "sync" do
+        respond do
+          raise "Some error"
+        end
+      end
+
+      on :body, starts_with: "async" do
+        respond_async do
+          raise "Some async error"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.body = "sync"
+    core.router.consume_input input
+    expect(outputs.first.body).to include "Unfortunately"
+
+    outputs = []
+    input = core.create_input
+    input.body = "async"
+    core.router.consume_input input
+    sleep(0.001)
+    expect(outputs.count).to eq 1
+    expect(outputs.first.body).to include "Unfortunately"
+
+    core.router.error_response do
+      body "Custom error message"
+    end
+
+    outputs = []
+    input = core.create_input
+    input.body = "sync"
+    core.router.consume_input input
+    expect(outputs.count).to eq 1
+    expect(outputs.first.body).to include "Custom error message"
+
+    outputs = []
+    input = core.create_input
+    input.body = "async"
+    core.router.consume_input input
+    sleep(0.001)
+    expect(outputs.count).to eq 1
+    expect(outputs.first.body).to include "Custom error message"
+  end
+
+  it "error handling in default_error_response with batteries" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "sync" do
+        respond do
+          raise "Some error"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.body = "sync"
+    core.router.consume_input input
+    expect(outputs.last.body).to include "Unfortunately, error happened"
+  end
+
+  it "error handling in default_error_response without batteries" do
+    core = Kanal::Core::Core.new
+
+    core.register_input_parameter :test_condition
+
+    core.add_condition_pack :test_condition do
+      add_condition :contains do
+        with_argument
+
+        met? do |input, _, argument|
+          if input.test_condition.is_a? String
+            input.test_condition.include? argument
+          else
+            false
+          end
+        end
+      end
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :test_condition, contains: "multi" do
+        respond do
+          body "Some body"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.test_condition = "multi"
+    expect { core.router.consume_input input }.to raise_error(/no way to inform end user about it/)
+  end
+
+  it "error handling in custom error_response with batteries" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :body, starts_with: "sync" do
+        respond do
+          raise "Some error"
+        end
+      end
+    end
+
+    core.router.error_response do
+      raise "Error in error_response!"
+    end
+
+    input = core.create_input
+    input.body = "sync"
+    core.router.consume_input input
+    expect(outputs.last.body).to include "Unfortunately, error happened"
+  end
+
+  it "error handling in custom error_response without batteries" do
+    core = Kanal::Core::Core.new
+
+    core.register_input_parameter :test_condition
+
+    core.add_condition_pack :test_condition do
+      add_condition :contains do
+        with_argument
+
+        met? do |input, _, argument|
+          if input.test_condition.is_a? String
+            input.test_condition.include? argument
+          else
+            false
+          end
+        end
+      end
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      outputs << output
+    end
+
+    core.router.configure do
+      on :test_condition, contains: "multi" do
+        respond do
+          body "Some body"
+        end
+      end
+    end
+
+    core.router.error_response do
+      raise "Error in error_response!"
+    end
+
+    input = core.create_input
+    input.test_condition = "multi"
+    expect { core.router.consume_input input }.to raise_error(/no way to inform end user about it/)
+  end
+
+  it "error handling in output_block" do
+    core = Kanal::Core::Core.new
+
+    core.register_plugin Kanal::Plugins::Batteries::BatteriesPlugin.new
+
+    core.router.configure do
+    end
+
+    core.router.default_response do
+      body "Default"
+    end
+
+    outputs = []
+
+    core.router.output_ready do |output|
+      raise "Error in output block"
+    end
+
+    core.router.configure do
+      on :body, starts_with: "test" do
+        respond do
+          body "test"
+        end
+      end
+    end
+
+    input = core.create_input
+    input.body = "multi"
+    expect { core.router.consume_input input }.to raise_error(/Error in output_ready block!/)
   end
 end

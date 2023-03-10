@@ -25,6 +25,15 @@ module Kanal
           @core = core
           @root_node = nil
           @default_node = nil
+          @default_error_node = nil
+          default_error_response do
+            if core.plugin_registered? :batteries
+              body "Unfortunately, error happened. Please consider contacting the creator of this bot to provide information about the circumstances of this error."
+            else
+              raise "Error occurred and there is no way to inform end user about it. You can override error response with router.error_response method or register :batteries plugin so default response will populate the .body output parameter"
+            end
+          end
+          @error_node = nil
           @response_execution_queue = Queue.new
           @output_queue = Queue.new
           @output_ready_block = nil
@@ -34,8 +43,14 @@ module Kanal
           _output_queue = @output_queue
           @output_queue.hooks.attach :item_queued do |output|
             _this.logger.info "Calling output_ready block for input ##{output.input.__id__} and output #{output.__id__}. Output body is: '#{output.body}'"
-            _this.output_ready_block.call output
-            _output_queue.remove(output)
+
+            begin
+              _this.output_ready_block.call output
+              _output_queue.remove(output)
+            rescue
+              _output_queue.remove(output)
+              raise "Error in output_ready block!"
+            end
           end
         end
 
@@ -60,6 +75,14 @@ module Kanal
           @default_node = RouterNode.new parent: nil, router: self, default: true
 
           @default_node.respond(&block)
+        end
+
+        def error_response(&block)
+          raise "error node for router #{@name} already defined" if @error_node
+
+          @error_node = RouterNode.new parent: nil, router: self, error: true
+
+          @error_node.respond(&block)
         end
 
         # Main method for creating output(s) if it is found or going to default output
@@ -101,7 +124,9 @@ module Kanal
 
           response_blocks = node.response_blocks
 
-          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input }
+          error_node = @error_node || @default_error_node
+
+          response_execution_blocks = response_blocks.map { |rb| ResponseExecutionBlock.new rb, input, @default_error_node, @error_node }
 
           response_execution_blocks.each do |reb|
             @response_execution_queue.enqueue reb
@@ -154,6 +179,12 @@ module Kanal
         end
 
         private :test_input_against_router_node
+
+        def default_error_response(&block)
+          @default_error_node = RouterNode.new parent: nil, router: self, error: true
+
+          @default_error_node.respond(&block)
+        end
       end
     end
   end
