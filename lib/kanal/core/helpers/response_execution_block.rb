@@ -50,7 +50,7 @@ module Kanal
 
             error_node = @error_node || @default_error_node
 
-            logger.info "Trying to construct error response for input ##{input.__id__}. Error response is default: #{!@error_node.nil?}"
+            logger.info "Trying to construct error response for input ##{input.__id__}. Error response is default: #{@error_node.nil?}"
 
             begin
               output.instance_eval(&error_node.response_blocks.first.block)
