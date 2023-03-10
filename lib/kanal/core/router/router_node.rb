@@ -2,6 +2,7 @@
 
 require_relative "../output/output"
 require_relative "../helpers/response_block"
+require_relative "../logger/logging"
 
 module Kanal
   module Core
@@ -13,6 +14,7 @@ module Kanal
       class RouterNode
         include Output
         include Helpers
+        include Logging
 
         attr_reader :parent,
                     :children
@@ -20,7 +22,7 @@ module Kanal
         # parameter default: is for knowing that this node
         # is for default response
         # default response cannot have child nodes
-        def initialize(*args, router:, parent:, default: false, root: false)
+        def initialize(*args, router:, parent:, default: false, root: false, error: false)
           @router = router
           @parent = parent
 
@@ -34,7 +36,7 @@ module Kanal
 
           # We omit setting conditions because default router node does not need any conditions
           # Also root node does not have conditions so we basically omit them if arguments are empty
-          return if default || root
+          return if default || root || error
 
           # With this we attach names of condition pack and condition to this router
           # node, so we will be able to find them later at runtime and use them
@@ -94,6 +96,8 @@ module Kanal
           condition = pack.get_condition_by_name! condition_name
 
           if condition.with_argument? && !@condition_argument
+            logger.fatal "Condition requires argument, but was provided as :symbol, not as positional_arg:"
+
             raise "Condition requires argument, though you wrote it as :symbol, not as positional_arg:
             Please check route with condition pack: #{condition_pack_name} and condition: #{condition_name}"
           end

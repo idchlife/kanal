@@ -8,6 +8,8 @@ require_relative "./helpers/parameter_registrator"
 require_relative "./plugins/plugin"
 require_relative "./input/input"
 require_relative "./services/service_container"
+require_relative "./logger/logging"
+
 
 module Kanal
   module Core
@@ -34,6 +36,7 @@ module Kanal
       include Plugins
       include Hooks
       include Services
+      include Logging
 
       # @return [Kanal::Core::Conditions::ConditionStorage]
       attr_reader :condition_storage
@@ -74,6 +77,8 @@ module Kanal
       #
       def register_plugin(plugin)
         unless plugin.is_a? Plugin
+          logger.fatal "Attempted to register plugin that is not of type Kanal::Core::Plugin or a class that inherits base Plugin class"
+
           raise "Plugin must be of type Kanal::Core::Plugin or be a class that inherits base Plugin class"
         end
 
@@ -82,9 +87,15 @@ module Kanal
           name = plugin.name
 
           # TODO: _log that plugin already registered with such name
-          return if !name.nil? && plugin_registered?(name)
+          if !name.nil? && plugin_registered?(name)
+            logger.warn "Plugin '#{name}' already registered"
+
+            return
+          end
 
           plugin.setup(self)
+
+          logger.info "Registering plugin '#{name}'"
 
           @plugins.append plugin
           # NOTE: Catching here Exception because metho.name can raise ScriptError (derived from Exception)
@@ -101,6 +112,8 @@ module Kanal
           end
 
           # TODO: _log this info in critical error instead of raising exception
+          logger.fatal "There was a problem while registering plugin named: #{name}. Error: `#{e}`."
+
           raise "There was a problem while registering plugin named: #{name}. Error: `#{e}`.
           Remember, plugin errors are often due to .name method not overriden or
           having faulty code inside .setup overriden method"
@@ -153,6 +166,8 @@ module Kanal
       # @return [void] <description>
       #
       def register_input_parameter(name, readonly: false)
+        logger.info "Registering input parameter: '#{name}', readonly: '#{readonly}'"
+
         @input_parameter_registrator.register_parameter name, readonly: readonly
       end
 
@@ -165,6 +180,7 @@ module Kanal
       # @return [void] <description>
       #
       def register_output_parameter(name, readonly: false)
+        logger.info "Registering output parameter: '#{name}', readonly: '#{readonly}'"
         @output_parameter_registrator.register_parameter name, readonly: readonly
       end
 
@@ -179,6 +195,8 @@ module Kanal
       # @return [void] <description>
       #
       def add_condition_pack(name, &block)
+        logger.info "Starting to create condition pack '#{name}'"
+
         creator = ConditionPackCreator.new name
 
         pack = creator.create(&block)

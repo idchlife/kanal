@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 
+require_relative "../logger/logging"
+
 module Kanal
   module Core
     module Conditions
       # This class contains all needed functionality to store,
       # search conditions
       class ConditionStorage
+        include Logging
+
         def initialize
           @condition_packs = []
         end
@@ -13,7 +17,11 @@ module Kanal
         def get_condition_pack_by_name!(name)
           pack = get_condition_pack_by_name name
 
-          raise "Condition pack #{name} is not registered, but was requested from ConditionStorage" unless pack
+          unless pack
+            logger.fatal "Attempted to request unregistered condition pack #{name} from ConditionStorage"
+
+            raise "Condition pack #{name} is not registered, but was requested from ConditionStorage"
+          end
 
           pack
         end
@@ -46,7 +54,13 @@ module Kanal
         def register_condition_pack(pack)
           return if condition_pack_exists? pack
 
-          raise "Condition pack should be descendant of ConditionPack class" unless pack.is_a? ConditionPack
+          unless pack.is_a? ConditionPack
+            logger.fatal "Attempted to register condition pack which isn't of ConditionPack class"
+
+            raise "Condition pack should be descendant of ConditionPack class"
+          end
+
+          logger.info "Registering condition pack '#{pack.name}'"
 
           @condition_packs.append pack
         end
