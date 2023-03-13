@@ -1,24 +1,25 @@
 # frozen_string_literal: true
 
+require_relative "../../../core/helpers/file_creator"
+
 module Kanal
   module Plugins
     module Batteries
       module Attachments
         class Attachment
-          attr_reader :url, :dir_path
+          include Core::Helpers::FileCreator
 
           def initialize(url)
             @url = url
-            # TODO: Create directory / check if directory exists
-            @dir_path = "./uploads/#{self.class.name}/"
           end
 
-          def save()
-            # downloads @url content
-            # generates filename, checks if file exists, recursively
-            # saves file
-            # TODO: file extensions depending on self.class.name?
-            # returns filepath
+          def save(dir_path, extension)
+            # TODO: add code here
+            content = "downloaded url content"
+
+            filepath = save_file_and_get_path content, dir_path, extension
+
+            filepath
           end
         end
       end

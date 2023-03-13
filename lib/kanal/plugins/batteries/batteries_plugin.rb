@@ -114,9 +114,9 @@ module Kanal
         end
 
         def attachments_batteries(core)
-          core.register_input_parameter :image_url
-          core.register_input_parameter :audio_url
-          core.register_input_parameter :file_url
+          core.register_input_parameter :image
+          core.register_input_parameter :audio
+          core.register_input_parameter :file
 
           core.register_output_parameter :image
           core.register_output_parameter :audio
