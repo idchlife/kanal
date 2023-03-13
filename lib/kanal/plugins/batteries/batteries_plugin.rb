@@ -16,6 +16,8 @@ module Kanal
           source_batteries core
           body_batteries core
           flow_batteries core
+          attachments_batteries core
+          reply_markup_batteries core
         end
 
         def flow_batteries(core)
@@ -109,6 +111,20 @@ module Kanal
               end
             end
           end
+        end
+
+        def attachments_batteries(core)
+          core.register_input_parameter :image
+          core.register_input_parameter :audio
+          core.register_input_parameter :file
+
+          core.register_output_parameter :image
+          core.register_output_parameter :audio
+          core.register_output_parameter :file
+        end
+
+        def reply_markup_batteries(core)
+          core.register_output_parameter :reply_markup
         end
       end
     end
